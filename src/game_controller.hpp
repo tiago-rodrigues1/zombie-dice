@@ -13,6 +13,14 @@ enum dice_colors_e : std::uint8_t {
   RED,
 };
 
+enum GameState : std::uint8_t {
+  WELCOME,
+  READ_PLAYERS,
+  DEFINE_FIRST_PLAYER,
+  READ_ACTION,
+  END_TURN
+};
+
 class Dice {
 private:
   dice_colors_e color;
@@ -30,33 +38,45 @@ private:
   }
 };
 
-class Player {
-  public:
-    std::string name;
-    size_t points;
-    DRA player_DRA;
-};
 
 class DRA {
   public:
-    std::vector<Dice> chosen_dices;
-    std::vector<std::string> roll_dices();
+  std::vector<Dice> chosen_dices;
+  std::vector<std::string> roll_dices();
+};
+class Player {
+  public:
+    std::string name;
+    size_t points{0};
+    DRA player_DRA;
 };
 
-class DiceBag {
-public:
-  std::map<Dice, size_t> dice_bag = { { Dice(GREEN), 6 }, { Dice(ORANGE), 4 }, { Dice(RED), 3 } };
+//class DiceBag {
+//public:
+  //std::map<Dice, size_t> dice_bag = { { Dice(GREEN), 6 }, { Dice(ORANGE), 4 }, { Dice(RED), 3 } };
   // pensei em deixarmos que nem estão os dados "gggggoooorrr"...;
 
-  size_t number_of_dices{13};
+  //size_t number_of_dices{13};
 
-  void get_dices(Player& player);
-};
+  //void get_dices(Player& player);
+//}
 
 class GameController{
-
+  private:
+  
+  
   public:
+  GameState game_state;
+  std::vector<Player> players;
+  Player current_player;
+
+  void welcome_message();
+  std::vector<std::string> read_players();
+  void define_players(std::vector<std::string> players_name);
+  void define_first_player();
+  void players_message();
   void parse_config(int argc, char* argv[]);
+  void process_events();
 
 };
 

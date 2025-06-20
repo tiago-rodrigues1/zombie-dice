@@ -3,6 +3,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include "game_controller.hpp"
 
 void printConfig(const std::map<std::string, std::map<std::string, std::string>>& config) {
     for (const auto& outerPair : config) {
@@ -18,10 +19,11 @@ void printConfig(const std::map<std::string, std::map<std::string, std::string>>
 }
 
 int main() {
+    GameController gc;
+    gc.welcome_message();
 
-  std::ifstream ifs{ "zdice.ini" };
-
-  auto config = IniParser::parse(ifs);
-  printConfig(config);
-  return 0;
+    gc.define_players(gc.read_players());
+    gc.define_first_player();
+    gc.players_message();
+  
 }
