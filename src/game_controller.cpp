@@ -3,6 +3,9 @@
 #include <iostream>
 #include <random>
 #include <sstream>
+#include <iomanip>
+#include <algorithm>
+#include <chrono>
 
 std::vector<std::string> DRA::roll_dices() {
   std::random_device rd;
@@ -101,7 +104,6 @@ void GameController::welcome_message() {
 
 void GameController::define_players(std::vector<std::string> players_name) {
 
-
   for (const std::string& name : players_name) {
     Player player;
     player.name = name;
@@ -110,12 +112,11 @@ void GameController::define_players(std::vector<std::string> players_name) {
 }
 
 void GameController::define_first_player() {
-  std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<> dist(0, players.size() - 1);
-  auto index = dist(gen);
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 
-  current_player = players[index];
+  std::shuffle(players.begin(), players.end(), std::default_random_engine(seed));
+
+  current_player = players[0];
 }
 
 void GameController::players_message() {
@@ -125,8 +126,35 @@ void GameController::players_message() {
   }
 
   std::cout << ">>> The player who will start the game is \"" << current_player.name << "\"\n";
-  std::cout << "Press <Enter> to start the match.\n";
+    "Press <Enter> to start the match.\n";
 }
+
+void GameController::read_actions(){
+  std::string action;
+  std::getline(std::cin, action);
+
+  if (action == "H"){
+    current_player.current_action = actions_e::HOLD;
+  } else if (action == "Q"){
+    current_player.current_action = actions_e::QUIT_TURN;
+  } else if (action.empty()){
+    current_player.current_action = actions_e::ROLL;
+  }
+}
+
+void Player::apply_action(){
+  switch (current_action)
+  {
+  case actions_e::ROLL:
+    //get_dices
+    player_DRA.roll_dices();
+    break;
+  
+  default:
+    break;
+  }
+}
+
 
 void GameController::process_events() {
   switch (game_state) {
@@ -140,10 +168,39 @@ void GameController::process_events() {
     define_first_player();
     players_message();
     break;
-
+  case GameState::READ_ACTION:
+    read_actions();
+    current_player.apply_action();
   default:
     break;
   }
+}
+
+void GameController::update_events(){
+  switch (game_state)
+  {
+  case GameState::WELCOME:
+    game_state = GameState::READ_PLAYERS;
+    break;
+  case GameState::READ_PLAYERS:
+    game_state = GameState::DEFINE_FIRST_PLAYER;
+    break;
+  case GameState::DEFINE_FIRST_PLAYER:
+    game_state = GameState::READ_ACTION;
+    break;
+  default:
+    break;
+  }
+}
+
+void title_and_message_area(){
+  std::cout << std::setw(20) << "→☣️ [🧟] Zombie Dice Delux, v 0.1 [🧟] ☣️←"  << std::setw(20) << "\n";
+  std::cout << std::setw(20) << "┌────────────────────────┐" << std::setw(20) << "\n";
+  std::cout << std::setw(20) << "│      Global Score      │" << std::setw(20) << "\n";
+  std::cout << std::setw(20) << "└────────────────────────┘" << std::setw(20) << "\n";
+
+  // terminar
+
 }
 
 void GameController::parse_config(int argc, char* argv[]) {

@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include "game_controller.hpp"
+#include <iomanip>
 
 void printConfig(const std::map<std::string, std::map<std::string, std::string>>& config) {
     for (const auto& outerPair : config) {
@@ -18,12 +19,18 @@ void printConfig(const std::map<std::string, std::map<std::string, std::string>>
     }
 }
 
-int main() {
-    GameController gc;
-    gc.welcome_message();
+void title_and_message_area(){
+  std::cout << std::setw(20) << "→☣️ [🧟] Zombie Dice Delux, v 0.1 [🧟] ☣️←"  << std::setw(20) << "\n";
+  std::cout << std::setw(20) << "┌────────────────────────┐" << std::setw(20) << "\n";
+  std::cout << std::setw(20) << "│      Global Score      │" << std::setw(20) << "\n";
+  std::cout << std::setw(20) << "└────────────────────────┘" << std::setw(20) << "\n";
 
-    gc.define_players(gc.read_players());
-    gc.define_first_player();
-    gc.players_message();
+
+
+}
+
+
+int main() {
+    title_and_message_area();
   
 }
