@@ -14,7 +14,7 @@ public:
 
   size_t count_dices();
   void shuffle_bag();
-  static std::vector<Zdie> draw(int n = 3);
+  std::vector<Zdie> draw(int n = 3);
   void add_dices(std::vector<Zdie> new_dices);
 };
 #endif

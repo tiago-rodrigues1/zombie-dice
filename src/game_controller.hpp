@@ -26,8 +26,7 @@ class GameController {
   std::vector<Zdie> DRA;
   std::vector<Zdie> BSA;
   std::vector<Zdie> SSA;
-  Player current_player;
-  DiceBag dice_bag;
+  DiceBag& dice_bag;
   size_t players_count;
   
   void welcome_message();
@@ -39,8 +38,10 @@ class GameController {
   void roll_dices();
   void draw_dices();
   void update_player();
+  void points_to_player();
   
   public:
+  GameController();
   void parse_config(int argc, char* argv[]);
   void process_events();
   void update();
