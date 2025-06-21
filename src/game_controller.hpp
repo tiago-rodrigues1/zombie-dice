@@ -11,7 +11,7 @@
 #include "dice_bag.hpp"
 
 
-enum GameState : std::uint8_t { WELCOME, READ_PLAYERS, DEFINE_FIRST_PLAYER, READ_ACTION, END_TURN };
+enum GameState : std::uint8_t { WELCOME, READ_PLAYERS, READ_ACTION, ROLL, END_TURN };
 
 class DRA {
 public:
@@ -20,10 +20,15 @@ public:
 
 
 class GameController {
-private:
+  private:
   GameState game_state;
   std::vector<Player> players;
+  std::vector<Zdie> DRA;
+  std::vector<Zdie> BSA;
+  std::vector<Zdie> SSA;
   Player current_player;
+  DiceBag dice_bag;
+  size_t players_count;
   
   void welcome_message();
   std::vector<std::string> read_players();
@@ -31,13 +36,16 @@ private:
   void define_first_player();
   void players_message();
   void read_actions();
+  void roll_dices();
+  void draw_dices();
+  void update_player();
   
   public:
-  static DRA dice_area;
   void parse_config(int argc, char* argv[]);
   void process_events();
   void update();
   void render();
+  bool game_over(bool quit_game = false);
 };
 
 #endif

@@ -7,6 +7,25 @@
 #include <algorithm>
 #include <chrono>
 
+void GameController::update_player(){
+  ++players_count;
+  current_player = players[players_count];
+}
+
+void GameController::roll_dices(){
+  for(size_t i{DRA.size()}; i > DRA.size(); --i){
+        Zdie dice = DRA[i];
+        char face = dice.roll();
+
+        if(face == 'b'){
+          BSA.push_back(dice);
+          DRA.erase(DRA.begin() + i);
+        } else if (face == 'f') {
+          SSA.push_back(dice);
+          DRA.erase(DRA.begin() + i);
+        } 
+  }
+}
 
 std::vector<std::string> GameController::read_players() {
   std::string players_name;
@@ -72,6 +91,7 @@ void GameController::define_first_player() {
   std::shuffle(players.begin(), players.end(), std::default_random_engine(seed));
 
   current_player = players[0];
+  players_count = 0;
 }
 
 void GameController::players_message() {
@@ -89,11 +109,11 @@ void GameController::read_actions(){
   std::getline(std::cin, action);
 
   if (action == "H"){
-    current_player.current_action = actions_e::HOLD;
+    game_state = GameState::END_TURN;
   } else if (action == "Q"){
-    current_player.current_action = actions_e::QUIT_TURN;
+    game_over(true);
   } else if (action.empty()){
-    current_player.current_action = actions_e::ROLL;
+    game_state = GameState::ROLL;
   }
 }
 
@@ -104,14 +124,21 @@ void GameController::process_events() {
     break;
   case GameState::READ_PLAYERS:
     define_players(read_players());
-    break;
-  case GameState::DEFINE_FIRST_PLAYER:
     define_first_player();
     players_message();
     break;
   case GameState::READ_ACTION:
     read_actions();
-    current_player.apply_action();
+    process_events();
+    break;
+  case GameState::ROLL:
+    DRA = dice_bag.draw();
+    roll_dices();
+    // falta terminar 
+    break;
+  case GameState::END_TURN:
+    // colocar os pontos no player
+    update_player();
   default:
     break;
   }
@@ -124,9 +151,12 @@ void GameController::update(){
     game_state = GameState::READ_PLAYERS;
     break;
   case GameState::READ_PLAYERS:
-    game_state = GameState::DEFINE_FIRST_PLAYER;
+    game_state = GameState::READ_ACTION;
     break;
-  case GameState::DEFINE_FIRST_PLAYER:
+  case GameState::ROLL:
+    game_state = GameState::READ_ACTION;
+    break;
+  case GameState::END_TURN:
     game_state = GameState::READ_ACTION;
     break;
   default:
@@ -142,6 +172,11 @@ void title_and_message_area(){
 
   // terminar
 
+}
+
+bool GameController::game_over(bool quit_game){
+    // Implement your logic here
+    return true;
 }
 
 void GameController::parse_config(int argc, char* argv[]) {
