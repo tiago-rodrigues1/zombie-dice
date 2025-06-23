@@ -15,13 +15,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
 include_directories(src/include)
 
 #=== Main App ===
-set( APP_NAME "zombiedice" )
+set( APP_NAME "zdice" )
 add_executable( ${APP_NAME}
   src/dice_bag.cpp
   src/game_controller.cpp
   src/ini_parser.cpp
-  src/test.cpp
+  src/main.cpp
   src/zdie.cpp
+  src/views.cpp
+  src/common.cpp
 )
 target_include_directories( ${APP_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/lib )
 target_compile_features( ${APP_NAME}  PUBLIC cxx_std_17 )

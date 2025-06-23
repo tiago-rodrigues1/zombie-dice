@@ -16,5 +16,6 @@ public:
   void shuffle_bag();
   std::vector<Zdie> draw(int n = 3);
   void add_dices(std::vector<Zdie> new_dices);
+  void add_dices(Zdie dice, size_t n);
 };
 #endif

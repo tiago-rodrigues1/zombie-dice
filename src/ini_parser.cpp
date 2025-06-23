@@ -1,54 +1,10 @@
-#include <fstream>
-#include <iostream>
-#include <sstream>      // std::istringstream
 #include <vector>
 
+#include "common.hpp"
 #include "ini_parser.hpp"
 
 std::string IniParser::current_section = "";
 std::map<std::string, std::map<std::string, std::string>> IniParser::config;
-
-/**
- * Trims characters from the beginning of a string.
- *
- * @param s The input string.
- * @param t A C-string containing the characters to trim.
- * @return A new string with leading characters removed.
- */
-
-std::string ltrim(const std::string& s, const char* t = " \t\n\r\f\v") {
-  std::string clone{ s };
-  clone.erase(0, clone.find_first_not_of(t));
-  return clone;
-}
-
-/**
- * Trims characters from the end of a string.
- *
- * @param s The input string.
- * @param t A C-string containing the characters to trim.
- * @return A new string with trailing characters removed.
- */
-std::string rtrim(const std::string& s, const char* t = " \t\n\r\f\v") {
-  std::string clone{ s };
-  clone.erase(clone.find_last_not_of(t) + 1);
-  return clone;
-}
-
-/**
- * Applies ltrim and rtrim in sequence.
- *
- * @param s The input string.
- * @param t A C-string containing the characters to trim.
- * @return A new string with leading and trailing characters removed.
- */
-std::string trim(const std::string& s, const char* t = " \t\n\r\f\v") {
-  std::string clone{ s };
-  clone = ltrim(clone, t);
-  clone = rtrim(clone, t);
-
-  return clone;
-}
 
 std::string remove_comments(std::string& l, const char* c = "#;") {
   std::string clone{ l };
@@ -73,21 +29,6 @@ std::string remove_quotes(const std::string& l) {
   }
 
   return clone;
-}
-
-std::vector<std::string> split(const std::string& str, char delimiter = ' ') {
-  std::vector<std::string> tokens;
-
-  std::istringstream iss;
-  iss.str(str);
-
-  std::string token;
-
-  while(std::getline(iss >> std::ws, token, delimiter)) {
-    tokens.emplace_back(token);
-  }
-
-  return tokens;
 }
 
 bool is_key_valid(const std::string& key) {

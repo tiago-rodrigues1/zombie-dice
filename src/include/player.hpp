@@ -3,12 +3,13 @@
 
 #include <string>
 #include <cstdint>
-#include "game_controller.hpp"
 
 class Player {
 public:
   std::string name;
   size_t points{ 0 };
+
+  Player() {};
 private:
 };
 

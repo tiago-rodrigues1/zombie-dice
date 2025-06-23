@@ -34,11 +34,12 @@
 int main(int argc, char* argv[]) {
   GameController gc;
   gc.parse_config(argc, argv);
+  gc.print_state();
   // The Game Loop (Architecture)
   while (not gc.game_over()) {
-    // GameController::print_state();
     gc.process_events();
     gc.update();
+    gc.print_state();
     gc.render();
   }
   return EXIT_SUCCESS;
