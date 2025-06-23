@@ -151,6 +151,7 @@ void GameController::process_events() {
     process_events();
     break;
   case GameState::ROLL:
+    ++players[players_count].count_turns;
     DRA = dice_bag.draw();
     roll_dices();
     // falta terminar
@@ -191,9 +192,19 @@ void title_and_message_area() {
   // terminar
 }
 
+bool GameController::checks_if_all_player_had_the_same_turns(){
+  for(Player player : players){
+    player.count_turns
+  }
+}
+
 bool GameController::game_over(bool quit_game) {
-  // Implement your logic here
-  return true;
+  
+  if((players[players_count].count_turns >= 13 &&) || !quit_game){
+    return true;
+  }
+  
+  return false;
 }
 
 void GameController::parse_config(int argc, char* argv[]) {

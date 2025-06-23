@@ -39,6 +39,7 @@ class GameController {
   void draw_dices();
   void update_player();
   void points_to_player();
+  bool checks_if_all_player_had_the_same_turns();
   
   public:
   GameController();
