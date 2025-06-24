@@ -6,6 +6,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <iostream>
+
 #include "dice_bag.hpp"
 #include "player.hpp"
 #include "zdie.hpp"
@@ -29,6 +31,8 @@ enum GameState : std::uint8_t {
   READ_PLAYERS,
   READ_ACTION,
   ROLL,
+  LOSE_TURN,
+  RECYCLE,
   END_TURN,
   QUIT,
   HOLD
@@ -36,17 +40,32 @@ enum GameState : std::uint8_t {
 
 inline std::string to_string(GameState state) {
   switch (state) {
+    case RECYCLE:      return "RECYCLE";
     case NEUTRAL:      return "NEUTRAL";
     case START:        return "START";
     case WELCOME:      return "WELCOME";
     case READ_PLAYERS: return "READ_PLAYERS";
     case READ_ACTION:  return "READ_ACTION";
     case ROLL:         return "ROLL";
+    case LOSE_TURN:    return "LOSE_TURN";
     case END_TURN:     return "END_TURN";
     case QUIT:         return "QUIT";
     case HOLD:         return "HOLD";
     default:           return "UNKNOWN";
   }
+}
+
+inline void print_running_opt(const RunningOpt& opt) {
+    std::cout << "RunningOpt configuration:\n";
+    std::cout << "  weak_dice      : " << opt.weak_dice << '\n';
+    std::cout << "  strong_dice    : " << opt.strong_dice << '\n';
+    std::cout << "  tough_dice     : " << opt.tough_dice << '\n';
+    std::cout << "  max_players    : " << opt.max_players << '\n';
+    std::cout << "  brains_to_win  : " << opt.brains_to_win << '\n';
+    std::cout << "  max_turns      : " << opt.max_turns << '\n';
+    std::cout << "  weak_die_faces : " << opt.weak_die_faces << '\n';
+    std::cout << "  strong_die_faces: " << opt.strong_die_faces << '\n';
+    std::cout << "  tough_die_faces : " << opt.tough_die_faces << '\n';
 }
 
 class GameController {
@@ -56,6 +75,7 @@ private:
   std::vector<Zdie> DRA;
   std::vector<Zdie> BSA;
   std::vector<Zdie> SSA;
+  std::map<std::string, size_t> partial_points;
   DiceBag dice_bag;
   size_t current_player_idx;
   size_t min_players;
@@ -65,7 +85,8 @@ private:
   void define_players(std::vector<std::string> players_names);
   void read_actions();
   void roll_dices();
-  void draw_dices();
+  void handle_roll();
+  void recycle();
   void update_player();
   void points_to_player();
 

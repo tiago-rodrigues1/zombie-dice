@@ -9,7 +9,6 @@
 #include <iostream>
 #include <random>
 #include <sstream>
-#include <fstream>
 
 void GameController::print_state() {
   std::cout << ">>> GAME_STATE = " << to_string(game_state) << '\n';
@@ -23,34 +22,7 @@ void GameController::update_player() {
   }
 }
 
-void GameController::roll_dices() {
-  for (size_t i{ DRA.size() }; i > 0; --i) {
-    Zdie dice = DRA[i];
-    char face = dice.roll();
-
-    if (face == 'b') {
-      BSA.push_back(dice);
-      DRA.erase(DRA.begin() + i);
-    } else if (face == 'f') {
-      SSA.push_back(dice);
-      DRA.erase(DRA.begin() + i);
-    }
-  }
-
-  if (SSA.size() >= 3) {
-    game_state = GameState::END_TURN;
-    dice_bag.add_dices(BSA);
-    dice_bag.add_dices(SSA);
-    dice_bag.add_dices(DRA);
-    SSA.clear();
-    BSA.clear();
-    DRA.clear();
-    process_events();
-  }
-}
-
 std::vector<std::string> GameController::read_players() {
-  std::cout << "> READING PLAYERS\n";
   std::string names_str;
   std::vector<std::string> names;
   std::getline(std::cin, names_str);
@@ -77,11 +49,8 @@ void GameController::define_players(std::vector<std::string> players_names) {
   for (const std::string& name : players_names) {
     Player player;
     player.name = name;
+    partial_points[player.name] = 0;
     players.push_back(player);
-  }
-
-  for (const Player& p : players) {
-    std::cout << p.name << '\n';
   }
 
   current_player_idx = 0;
@@ -106,6 +75,66 @@ void GameController::read_actions() {
   } else if (action.empty()) {
     game_state = GameState::ROLL;
   }
+
+  process_events();
+}
+
+void GameController::roll_dices() {
+  size_t i = 0;
+  while (i < DRA.size()) {
+    Zdie dice = DRA[i];
+    ZdieFaces face = dice.roll();
+
+    if (face == ZdieFaces::BRAIN) {
+      BSA.push_back(dice);
+      DRA.erase(DRA.begin() + i);
+    } else if (face == ZdieFaces::SHOTGUN) {
+      SSA.push_back(dice);
+      DRA.erase(DRA.begin() + i);
+    } else {
+      ++i;
+    }
+  }
+
+  if (SSA.size() >= 3) {
+    game_state = GameState::LOSE_TURN;
+    // dice_bag.add_dices(BSA);
+    // dice_bag.add_dices(SSA);
+    // dice_bag.add_dices(DRA);
+    // SSA.clear();
+    // BSA.clear();
+    // DRA.clear();
+    process_events();
+  }
+}
+
+void GameController::handle_roll() {
+  size_t dra_dices_count{ DRA.size() };
+  size_t required_dices{ 3 };
+
+  if (dra_dices_count < required_dices) {
+    required_dices -= dra_dices_count;
+    
+    if (dice_bag.count_dices() < required_dices) {
+      game_state = GameState::RECYCLE;
+      process_events();
+    }
+    
+    std::vector<Zdie> drawed_dices{ dice_bag.draw(required_dices) };
+    DRA.insert(DRA.begin(), drawed_dices.begin(), drawed_dices.end());
+  }
+
+  roll_dices();
+}
+
+void GameController::recycle() {
+  std::string current_player{ players[current_player_idx].name };
+  partial_points[current_player] = BSA.size();
+
+  std::vector<Zdie> recycle_dices{ BSA };
+  dice_bag.add_dices(recycle_dices);
+
+  BSA.clear();
 }
 
 void GameController::render() {
@@ -128,10 +157,10 @@ void GameController::process_events() {
     read_actions();
     break;
   case GameState::ROLL:
-    // DRA = dice_bag.draw();
-    // roll_dices();
-    std::cout << "ROLL\n";
-    // falta terminar
+    handle_roll();
+    break;
+  case GameState::RECYCLE:
+    recycle();
     break;
   case GameState::END_TURN:
     points_to_player();
@@ -158,6 +187,9 @@ void GameController::update() {
   case GameState::ROLL:
     game_state = GameState::READ_ACTION;
     break;
+  case GameState::RECYCLE:
+    game_state = ROLL;
+    break;
   case GameState::END_TURN:
     game_state = GameState::READ_ACTION;
     break;
@@ -167,8 +199,7 @@ void GameController::update() {
 }
 
 bool GameController::game_over(bool quit_game) {
-  current_player_idx += 1;
-  return current_player_idx == 2;
+  return game_state == LOSE_TURN;
 }
 
 void GameController::setup(const RunningOpt& run_options) {
@@ -189,22 +220,22 @@ void GameController::parse_config(int argc, char* argv[]) {
     exit(EXIT_SUCCESS);
   }
 
-  std::ifstream ifs{ arg };
-
   RunningOpt run_options;
 
-  if (ifs.good()) {
-    IniParser::parse(ifs);
+  if (IniParser::parse(arg)) {
+    run_options.weak_dice = IniParser::get_config<int>("Game.weak_dice", run_options.weak_dice);
+    run_options.strong_dice = IniParser::get_config<int>("Game.strong_dice", run_options.strong_dice);
+    run_options.tough_dice = IniParser::get_config<int>("Game.tough_dice", run_options.tough_dice);
+    run_options.max_players = IniParser::get_config<int>("Game.max_players", run_options.max_players);
+    run_options.brains_to_win = IniParser::get_config<int>("Game.brains_to_win", run_options.brains_to_win);
+    run_options.max_turns = IniParser::get_config<int>("Game.max_turns", run_options.max_turns);
 
-    run_options.weak_dice = IniParser::get_config<int>("Game.weak_dice");
-    run_options.strong_dice = IniParser::get_config<int>("Game.strong_dice");
-    run_options.tough_dice = IniParser::get_config<int>("Game.tough_dice");
-    run_options.max_players = IniParser::get_config<int>("Game.max_players");
-    run_options.brains_to_win = IniParser::get_config<int>("Game.brains_to_win");
-    run_options.max_turns = IniParser::get_config<int>("Game.max_turns");
-
-    run_options.weak_die_faces = IniParser::get_config<std::string>("Dice.weak_die_faces");
-    run_options.strong_die_faces = IniParser::get_config<std::string>("Dice.strong_die_faces");
-    run_options.tough_die_faces = IniParser::get_config<std::string>("Dice.tough_die_faces");
+    run_options.weak_die_faces = IniParser::get_config<std::string>("Dice.weak_die_faces", run_options.weak_die_faces);
+    run_options.strong_die_faces = IniParser::get_config<std::string>("Dice.strong_die_faces", run_options.strong_die_faces);
+    run_options.tough_die_faces = IniParser::get_config<std::string>("Dice.tough_die_faces", run_options.tough_die_faces);
+  } else {
+    std::cout << "--> using default config\n";
   }
+
+  setup(run_options);
 }
