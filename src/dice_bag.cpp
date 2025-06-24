@@ -1,14 +1,10 @@
-#include <algorithm>    // std::shuffle
-#include <chrono>       // std::chrono::system_clock
-#include <random>       // std::default_random_engine
-
-#include "dice_bag.hpp"
+#include "include/common.hpp"
+#include "include/dice_bag.hpp"
 
 size_t DiceBag::count_dices() { return dices.size(); }
 
 void DiceBag::shuffle_bag() {
-  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-  shuffle (dices.begin(), dices.end(), std::default_random_engine(seed));
+  shuffler(dices.begin(), dices.end());
 }
 
 std::vector<Zdie> DiceBag::draw(int n) {
@@ -17,6 +13,12 @@ std::vector<Zdie> DiceBag::draw(int n) {
   dices.erase(dices.end() - n,  dices.end());
 
   return drawed_dices;
+}
+
+void DiceBag::add_dices(Zdie dice, size_t n) {
+  for (size_t i{ 0 }; i < n; ++i) {
+    dices.emplace_back(dice);
+  }
 }
 
 void DiceBag::add_dices(std::vector<Zdie> new_dices) {

@@ -1,6 +1,6 @@
 #include <random>
 
-#include "zdie.hpp"
+#include "include/zdie.hpp"
 
 Zdie::Zdie(dice_type_e t, std::string f) : type(t), faces(f) {}
 

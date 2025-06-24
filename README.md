@@ -3,15 +3,8 @@
 
 ### Table of Contents
 
-1. [Introduction](#introduction)
-2. [Gameplay](#gameplay)
-3. [Input](#input)
-4. [Interface](#interface)
-5. [System Modeling](#system-modeling)
-6. [Output](#output)
-7. [Assignment Grading](#assignment-grading)
-8. [Authorship and Collaboration Policy](#authorship-and-collaboration-policy)
-9. [Work Submission](#work-submission)
+- [Authorship and Collaboration Policy](#authorship-and-collaboration-policy)
+- [Work Submission](#work-submission)
 
 ## Introduction
 

@@ -1,6 +1,7 @@
 #ifndef INI_PARSER_HPP
 #define INI_PARSER_HPP
 
+#include <fstream>
 #include <string>
 #include <map>
 
