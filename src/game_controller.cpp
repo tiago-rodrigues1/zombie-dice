@@ -64,13 +64,13 @@ void GameController::points_to_player() {
 
   if (players[current_player_idx].points >= highest_point && limit_of_turns == 0) {
     limit_of_turns = players[current_player_idx].count_turns;
-   
   }
 }
 
-
 void GameController::read_actions() {
-  message = {"Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"};
+  message = {
+    "Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"
+  };
   std::string action;
   std::getline(std::cin, action);
 
@@ -124,12 +124,12 @@ void GameController::handle_roll() {
 
   if (dra_dices_count < required_dices) {
     required_dices -= dra_dices_count;
-    
+
     if (dice_bag.count_dices() < required_dices) {
       game_state = GameState::RECYCLE;
       process_events();
     }
-    
+
     std::vector<Zdie> drawed_dices{ dice_bag.draw(required_dices) };
     DRA.insert(DRA.begin(), drawed_dices.begin(), drawed_dices.end());
   }
@@ -156,18 +156,20 @@ void GameController::render() {
     Views::show_players_message(players);
     break;
   case GameState::READ_ACTION:
-  Views::title_and_scoreboard_area(players, current_player_idx);
-  Views::areas(players[current_player_idx], dice_bag.count_dices(), BSA, SSA);
-  Views::message_area(message);
-  Views::rolling_table({{ZdieFaces::BRAIN, dice_type_e::GREEN}, {ZdieFaces::BRAIN, dice_type_e::GREEN}, {ZdieFaces::BRAIN, dice_type_e::GREEN}});
-
+    Views::title_and_scoreboard_area(players, current_player_idx);
+    Views::areas(players[current_player_idx], dice_bag.count_dices(), BSA, SSA);
+    Views::message_area(message);
+    Views::rolling_table({ { ZdieFaces::BRAIN, dice_type_e::GREEN },
+                           { ZdieFaces::BRAIN, dice_type_e::GREEN },
+                           { ZdieFaces::BRAIN, dice_type_e::GREEN } });
+    break;
   }
 }
 
 std::vector<Player> GameController::get_highest_players() {
-  auto it = std::max_element(players.begin(),
-                             players.end(),
-                             [](const Player& a, const Player& b) { return a.points < b.points; });
+  auto it = std::max_element(players.begin(), players.end(), [](const Player& a, const Player& b) {
+    return a.points < b.points;
+  });
 
   if (it != players.end()) {
     highest_point = it->points;
@@ -193,6 +195,13 @@ void GameController::checks_end_of_game() {
   }
 
   else if (!top_players.empty()) {
+    std::string player_names;
+    for(Player player : top_players){
+      player_names.append("\"");
+      player_names.append(player.name);
+      player_names.append("\" ");
+    };
+    message = {"We have a tie!", "Players in tie break:", player_names, "Press <enter> to continue."};
     game_state = GameState::READ_ACTION;
     limit_of_turns++;
     players = top_players;
@@ -209,6 +218,9 @@ void GameController::process_events() {
     define_players(read_players());
     break;
   case GameState::READ_ACTION:
+    message = {
+      "Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"
+    };
     read_actions();
     break;
   case GameState::ROLL:
@@ -218,7 +230,7 @@ void GameController::process_events() {
       if (all_turns_completed()) {
         checks_end_of_game();
       } else {
-        std::cout << "Jogador completou seus turnos";
+        message = { "All turns completed for this player." };
         game_state = GameState::READ_ACTION;
         update_player();
       }
@@ -228,6 +240,10 @@ void GameController::process_events() {
     recycle();
     break;
   case GameState::END_TURN:
+    message = { "Rolling outcome:",
+                "# brains you ate: " + BSA.size(),
+                "# shots that hit you: " + SSA.size(),
+                "Press <enter> to continue." };
     ++players[current_player_idx].count_turns;
     points_to_player();
     update_player();
@@ -235,8 +251,8 @@ void GameController::process_events() {
   case GameState::QUIT:
     game_over(true);
   case GameState::ERROR:
-    message = {"Invalid input!", "Please select a valid option"};
-    
+    message = { "Invalid input!", "Please select a valid option" };
+
   default:
     break;
   }
@@ -307,15 +323,21 @@ void GameController::parse_config(int argc, char* argv[]) {
 
   if (IniParser::parse(arg)) {
     run_options.weak_dice = IniParser::get_config<int>("Game.weak_dice", run_options.weak_dice);
-    run_options.strong_dice = IniParser::get_config<int>("Game.strong_dice", run_options.strong_dice);
+    run_options.strong_dice
+      = IniParser::get_config<int>("Game.strong_dice", run_options.strong_dice);
     run_options.tough_dice = IniParser::get_config<int>("Game.tough_dice", run_options.tough_dice);
-    run_options.max_players = IniParser::get_config<int>("Game.max_players", run_options.max_players);
-    run_options.brains_to_win = IniParser::get_config<int>("Game.brains_to_win", run_options.brains_to_win);
+    run_options.max_players
+      = IniParser::get_config<int>("Game.max_players", run_options.max_players);
+    run_options.brains_to_win
+      = IniParser::get_config<int>("Game.brains_to_win", run_options.brains_to_win);
     run_options.max_turns = IniParser::get_config<int>("Game.max_turns", run_options.max_turns);
 
-    run_options.weak_die_faces = IniParser::get_config<std::string>("Dice.weak_die_faces", run_options.weak_die_faces);
-    run_options.strong_die_faces = IniParser::get_config<std::string>("Dice.strong_die_faces", run_options.strong_die_faces);
-    run_options.tough_die_faces = IniParser::get_config<std::string>("Dice.tough_die_faces", run_options.tough_die_faces);
+    run_options.weak_die_faces
+      = IniParser::get_config<std::string>("Dice.weak_die_faces", run_options.weak_die_faces);
+    run_options.strong_die_faces
+      = IniParser::get_config<std::string>("Dice.strong_die_faces", run_options.strong_die_faces);
+    run_options.tough_die_faces
+      = IniParser::get_config<std::string>("Dice.tough_die_faces", run_options.tough_die_faces);
   } else {
     std::cout << "--> using default config\n";
   }

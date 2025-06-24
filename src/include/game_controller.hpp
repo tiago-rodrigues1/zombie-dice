@@ -86,7 +86,7 @@ private:
   size_t limit_of_turns{0};
   size_t highest_point{13};
   Views view;
-  std::vector<std::string> message;
+  std::vector<std::string> message{{"Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"}};
   
   std::vector<std::string> read_players();
   void define_players(std::vector<std::string> players_names);

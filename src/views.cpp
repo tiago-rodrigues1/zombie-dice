@@ -1,8 +1,8 @@
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 
 #include "include/views.hpp"
-
 
 void Views::welcome_message(size_t min_players, size_t max_players) {
   std::cout << R"(         ---> Welcome to the Zombi Dice game (v 0.1) <--
@@ -110,21 +110,20 @@ void Views::rolling_table(std::vector<std::pair<ZdieFaces, dice_type_e>> faces) 
   std::cout << "│" << std::string(padding_title, ' ') << title
             << std::string(box_width - padding_title - title.size(), ' ') << "│\n";
 
-
   std::cout << "├";
   for (int i = 0; i < 3; ++i) {
-    for(size_t j{0}; j < 13; ++j){
-      std::cout <<  '─';
+    for (size_t j{ 0 }; j < 13; ++j) {
+      std::cout << '─';
     }
-    if(i < 2){
+    if (i < 2) {
       std::cout << "┬";
-    } else{
+    } else {
       std::cout << "┤\n";
     }
   }
   std::cout << "│";
   for (size_t i{ 0 }; i < 3; ++i) {
-    std::string line{""};
+    std::string line{ "" };
     switch (faces[i].first) {
     case ZdieFaces::BRAIN:
       line += "🧠";
@@ -154,13 +153,13 @@ void Views::rolling_table(std::vector<std::pair<ZdieFaces, dice_type_e>> faces) 
     }
 
     size_t cell_width = 13;
-    size_t content_width = 6;  // 
+    size_t content_width = 6;  //
     size_t padding = (cell_width - content_width) / 2;
     std::cout << std::string(padding, ' ') << line
               << std::string(cell_width - padding - content_width, ' ');
 
-              std::cout << "│";
-  }   
+    std::cout << "│";
+  }
   std::cout << "\n└────────────────────────────────────────┘" << "\n";
 }
 
@@ -168,11 +167,26 @@ void Views::message_area(std::vector<std::string> messages) {
   size_t box_width{ 40 };
   size_t padding_left{ 3 };
 
-  std::cout << "┌─[ Message area ]───────────────────────┐" << "\n";
-  for (std::string message : messages) {
-    size_t padding_right{ box_width - message.size() - padding_left };
-    std::cout << "│" << std::string(padding_left, ' ') << message << std::string(padding_right, ' ')
-              << "│\n";
+  
+  std::cout << "┌─[ Message area ]";
+  for (size_t i{ 0 }; i < box_width - 17; ++i) {
+    std::cout << "─";
   }
-  std::cout << "└────────────────────────────────────────┘" << "\n";
+  std::cout << "┐\n";
+
+  for (std::string message : messages) {
+    if (message.size() + padding_left > box_width) {
+      message = message.substr(0, box_width - padding_left - 1);  // corta a mensagem para caber
+    }
+      size_t padding_right{ box_width - message.size() - padding_left };
+      std::cout << "│" << std::string(padding_left, ' ') << message
+                << std::string(padding_right, ' ') << "│\n";
+    
+  }
+
+  std::cout << "└";
+  for (size_t i{ 0 }; i < box_width; ++i) {
+    std::cout << "─";
+  }
+  std::cout << "┘";
 }
