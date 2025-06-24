@@ -18,15 +18,17 @@ void GameController::print_state() {
 void GameController::update_player() {
   ++current_player_idx;
 
-  if (current_player_idx >= players_playing.size()) {
+  if (current_player_idx >= players.size()) {
     current_player_idx = 0;
   }
 }
 
-void GameController::roll_dices() {
+std::vector<char> GameController::roll_dices() {
+  std::vector<char> faces;
   for (int i{ DRA.size() - 1 }; i >= 0; --i) {
     Zdie dice = DRA[i];
     char face = dice.roll();
+    faces.push_back(face);        
 
     if (face == 'b') {
       BSA.push_back(dice);
@@ -47,6 +49,8 @@ void GameController::roll_dices() {
     DRA.clear();
     process_events();
   }
+
+  return faces;
 }
 
 std::vector<std::string> GameController::read_players() {
@@ -80,8 +84,6 @@ void GameController::define_players(std::vector<std::string> players_names) {
     players.push_back(player);
   }
 
-  players_playing = players;
-
   for (const Player& p : players) {
     std::cout << p.name << '\n';
   }
@@ -91,11 +93,12 @@ void GameController::define_players(std::vector<std::string> players_names) {
 
 void GameController::points_to_player() {
   if (!BSA.empty()) {
-    players_playing[current_player_idx].points += BSA.size();
+    players[current_player_idx].points += BSA.size();
   }
 
-  if (players_playing[current_player_idx].points >= highest_point && limit_of_turns == 0) {
-    limit_of_turns = players_playing[current_player_idx].count_turns;
+  if (players[current_player_idx].points >= highest_point && limit_of_turns == 0) {
+    limit_of_turns = players[current_player_idx].count_turns;
+   
   }
 }
 
@@ -123,19 +126,26 @@ void GameController::render() {
   case GameState::START:
     Views::show_players_message(players);
     break;
+  case GameState::READ_ACTION:
+
+  Views::title_and_scoreboard_area(players, current_player_idx);
+  Views::areas(players[current_player_idx], dice_bag.count_dices(), BSA, SSA);
+  Views::message_area({"Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"});
+  Views::rolling_table({'b', 'f', 's'});
+
   }
 }
 
 std::vector<Player> GameController::get_highest_players() {
-  auto it = std::max_element(players_playing.begin(),
-                             players_playing.end(),
+  auto it = std::max_element(players.begin(),
+                             players.end(),
                              [](const Player& a, const Player& b) { return a.points < b.points; });
 
-  if (it != players_playing.end()) {
+  if (it != players.end()) {
     highest_point = it->points;
 
     std::vector<Player> top_players;
-    for (const Player& player : players_playing) {
+    for (const Player& player : players) {
       if (player.points == highest_point) {
         top_players.push_back(player);
       }
@@ -157,13 +167,13 @@ void GameController::checks_end_of_game() {
   else if (!top_players.empty()) {
     game_state = GameState::READ_ACTION;
     limit_of_turns++;
-    players_playing = top_players;
+    players = top_players;
     current_player_idx = 0;
   }
 }
 
 bool GameController::player_can_play() {
-  return limit_of_turns == 0 || players_playing[current_player_idx].count_turns != limit_of_turns;
+  return limit_of_turns == 0 || players[current_player_idx].count_turns != limit_of_turns;
 }
 void GameController::process_events() {
   switch (game_state) {
@@ -189,7 +199,7 @@ void GameController::process_events() {
     }
     break;
   case GameState::END_TURN:
-    ++players_playing[current_player_idx].count_turns;
+    ++players[current_player_idx].count_turns;
     points_to_player();
     update_player();
     break;
@@ -226,7 +236,7 @@ void GameController::update() {
 }
 
 bool GameController::all_turns_completed() {
-  for (Player player : players_playing) {
+  for (Player player : players) {
     if (limit_of_turns != player.count_turns) {
       return false;
     }

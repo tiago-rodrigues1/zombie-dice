@@ -9,6 +9,7 @@
 #include "dice_bag.hpp"
 #include "player.hpp"
 #include "zdie.hpp"
+#include "views.hpp"
 
 struct RunningOpt {
   int weak_dice{ 6 };
@@ -54,7 +55,6 @@ class GameController {
 private:
   GameState game_state;
   std::vector<Player> players;
-  std::vector<Player> players_playing;
   std::vector<Zdie> DRA;
   std::vector<Zdie> BSA;
   std::vector<Zdie> SSA;
@@ -65,23 +65,24 @@ private:
   Player winner;
   size_t limit_of_turns{0};
   size_t highest_point{13};
+  Views view;
   
   std::vector<std::string> read_players();
   void define_players(std::vector<std::string> players_names);
   void read_actions();
-  void roll_dices();
+  std::vector<char> roll_dices();
   void draw_dices();
   void update_player();
   void points_to_player();
   bool all_turns_completed();
   bool player_can_play();
   void checks_end_of_game();
-  std::vector<Player> GameController::get_highest_players();
+  std::vector<Player> get_highest_players();
   
   void setup(const RunningOpt& run_options);
   
   public:
-  GameController() {
+  GameController() : view() { // Initialize view with default constructor
     min_players = 2;
     max_players = 6;
     game_state = NEUTRAL;
