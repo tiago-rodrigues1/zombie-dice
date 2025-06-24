@@ -3,6 +3,7 @@
 
 #include "include/views.hpp"
 
+
 void Views::welcome_message(size_t min_players, size_t max_players) {
   std::cout << R"(         ---> Welcome to the Zombi Dice game (v 0.1) <--
 
@@ -98,39 +99,67 @@ void Views::areas(Player player,
   std::cout << "\n";
 }
 
-void Views::rolling_table(std::vector<char> faces) {
+void Views::rolling_table(std::vector<std::pair<ZdieFaces, dice_type_e>> faces) {
   std::string title{ "Rolling Table" };
   size_t box_width{ 40 };
   size_t padding_title{ (box_width - title.size()) / 2 };
-  std::cout << "┌────────────────────────────────────────┐" << "\n";
-  std::cout << "│" << std::string(padding_title, ' ') << title
-            << std::string(box_width - padding_title - title.size(), ' ') << "│\n";
-  std::cout << "├────────────────────────────────────────┤" << "\n";
-
   size_t cols = 3;
   size_t col_width = box_width / cols;
+  std::cout << "┌" << std::string(box_width, '─') << "┐\n";
+
+  std::cout << "│" << std::string(padding_title, ' ') << title
+            << std::string(box_width - padding_title - title.size(), ' ') << "│\n";
+
+
+  std::cout << "├";
+  for (int i = 0; i < 3; ++i) {
+    for(size_t j{0}; j < 13; ++j){
+      std::cout <<  '─';
+    }
+    if(i < 2){
+      std::cout << "┬";
+    } else{
+      std::cout << "┤\n";
+    }
+  }
   std::cout << "│";
   for (size_t i{ 0 }; i < 3; ++i) {
-    std::string emoji;
-    switch (faces[i]) {
-    case 'b':
-      emoji = "🧠(🟧)";
+    std::string line{""};
+    switch (faces[i].first) {
+    case ZdieFaces::BRAIN:
+      line += "🧠";
       break;
-    case 'f':
-      emoji = "💥(🟧)";
+    case ZdieFaces::SHOTGUN:
+      line += "💥";
       break;
-    case 's':
-      emoji = "👣(🟧)";
+    case ZdieFaces::FOOTPRINT:
+      line += "👣";
       break;
     default:
-      emoji = "❓(🟧)";
+      break;
+    }
+
+    switch (faces[i].second) {
+    case dice_type_e::GREEN:
+      line += "(🟩)";
+      break;
+    case dice_type_e::ORANGE:
+      line += "(🟧)";
+      break;
+    case dice_type_e::RED:
+      line += "(🟥)";
+      break;
+    default:
       break;
     }
 
     size_t cell_width = 13;
-    size_t content_width = 8;  // Aproximadamente 2+1+2+1+2
+    size_t content_width = 6;  // 
     size_t padding = (cell_width - content_width) / 2;
-    std::cout << std::setw(cell_width) << std::left << emoji << "│";
+    std::cout << std::string(padding, ' ') << line
+              << std::string(cell_width - padding - content_width, ' ');
+
+              std::cout << "│";
   }   
   std::cout << "\n└────────────────────────────────────────┘" << "\n";
 }

@@ -17,7 +17,7 @@ Views() {};
   static void area_points(const std::vector<Zdie>& points);
   static void areas(Player player, size_t quantity_dices, std::vector<Zdie> BSA, std::vector<Zdie> SSA);
   static void message_area(std::vector<std::string> messages);
-  static void rolling_table(std::vector<char> faces);
+  static void rolling_table(std::vector<std::pair<ZdieFaces, dice_type_e>> faces);
 };
 
 #endif

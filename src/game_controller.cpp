@@ -70,6 +70,7 @@ void GameController::points_to_player() {
 
 
 void GameController::read_actions() {
+  message = {"Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"};
   std::string action;
   std::getline(std::cin, action);
 
@@ -81,6 +82,8 @@ void GameController::read_actions() {
     game_state = GameState::QUIT;
   } else if (action.empty()) {
     game_state = GameState::ROLL;
+  } else {
+    game_state = GameState::ERROR;
   }
 
   process_events();
@@ -153,11 +156,10 @@ void GameController::render() {
     Views::show_players_message(players);
     break;
   case GameState::READ_ACTION:
-
   Views::title_and_scoreboard_area(players, current_player_idx);
   Views::areas(players[current_player_idx], dice_bag.count_dices(), BSA, SSA);
-  Views::message_area({"Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"});
-  Views::rolling_table({'b', 'f', 's'});
+  Views::message_area(message);
+  Views::rolling_table({{ZdieFaces::BRAIN, dice_type_e::GREEN}, {ZdieFaces::BRAIN, dice_type_e::GREEN}, {ZdieFaces::BRAIN, dice_type_e::GREEN}});
 
   }
 }
@@ -232,6 +234,9 @@ void GameController::process_events() {
     break;
   case GameState::QUIT:
     game_over(true);
+  case GameState::ERROR:
+    message = {"Invalid input!", "Please select a valid option"};
+    
   default:
     break;
   }
@@ -258,6 +263,9 @@ void GameController::update() {
     game_state = ROLL;
     break;
   case GameState::END_TURN:
+    game_state = GameState::READ_ACTION;
+    break;
+  case GameState::ERROR:
     game_state = GameState::READ_ACTION;
     break;
   default:

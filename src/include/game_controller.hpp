@@ -37,7 +37,7 @@ enum GameState : std::uint8_t {
   END_TURN,
   QUIT,
   HOLD,
-  TIE_BREAKER
+  ERROR
 };
 
 inline std::string to_string(GameState state) {
@@ -86,6 +86,7 @@ private:
   size_t limit_of_turns{0};
   size_t highest_point{13};
   Views view;
+  std::vector<std::string> message;
   
   std::vector<std::string> read_players();
   void define_players(std::vector<std::string> players_names);
