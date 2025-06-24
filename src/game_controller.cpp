@@ -15,12 +15,14 @@ void GameController::print_state() {
   std::cout << ">>> GAME_STATE = " << to_string(game_state) << '\n';
 }
 
-void GameController::update_player() {
+void GameController::next_player() {
   ++current_player_idx;
 
   if (current_player_idx >= players.size()) {
     current_player_idx = 0;
   }
+
+  ++players[current_player_idx].count_turns;
 }
 
 std::vector<std::string> GameController::read_players() {
@@ -55,16 +57,17 @@ void GameController::define_players(std::vector<std::string> players_names) {
   }
 
   current_player_idx = 0;
+  players[current_player_idx].count_turns = 1;
 }
 
-void GameController::points_to_player() {
-  if (!BSA.empty()) {
-    players[current_player_idx].points += BSA.size();
-  }
+void GameController::consolidate_points() {
+  Player player{ players[current_player_idx] };
+  player.points += partial_points[player.name];
 
-  if (players[current_player_idx].points >= highest_point && limit_of_turns == 0) {
-    limit_of_turns = players[current_player_idx].count_turns;
-   
+  std::cout << player.name << " made " << player.points << " points\n";
+
+  if (player.points >= highest_point && limit_of_turns == 0) {
+    limit_of_turns = player.count_turns;
   }
 }
 
@@ -105,14 +108,23 @@ void GameController::roll_dices() {
 
   if (SSA.size() >= 3) {
     game_state = GameState::LOSE_TURN;
-    // dice_bag.add_dices(BSA);
-    // dice_bag.add_dices(SSA);
-    // dice_bag.add_dices(DRA);
-    // SSA.clear();
-    // BSA.clear();
-    // DRA.clear();
     process_events();
   }
+}
+
+void GameController::dices_back_to_bag() {
+  dice_bag.add_dices(BSA);
+  dice_bag.add_dices(SSA);
+  dice_bag.add_dices(DRA);
+  SSA.clear();
+  BSA.clear();
+  DRA.clear();
+}
+
+void GameController::end_turn() {
+  consolidate_points();
+  dices_back_to_bag();
+  next_player();
 }
 
 void GameController::handle_roll() {
@@ -134,6 +146,12 @@ void GameController::handle_roll() {
   roll_dices();
 }
 
+void GameController::handle_hold() {
+  std::string player{ players[current_player_idx].name };
+
+  partial_points[player] += BSA.size();
+}
+
 void GameController::recycle() {
   std::string current_player{ players[current_player_idx].name };
   partial_points[current_player] = BSA.size();
@@ -142,6 +160,13 @@ void GameController::recycle() {
   dice_bag.add_dices(recycle_dices);
 
   BSA.clear();
+}
+
+void GameController::handle_quit() {
+  std::cout << players[current_player_idx].name << " is quitting\n";
+  dices_back_to_bag();
+  players.erase(players.begin() + current_player_idx);
+  next_player();
 }
 
 void GameController::render() {
@@ -187,7 +212,8 @@ void GameController::checks_end_of_game() {
 
   if (top_players.size() == 1) {
     winner = top_players[0];
-    game_state = GameState::QUIT;
+    std::cout << "We have a winner!\n";
+    game_state = GameState::END_GAME;
   }
 
   else if (!top_players.empty()) {
@@ -201,6 +227,7 @@ void GameController::checks_end_of_game() {
 bool GameController::player_can_play() {
   return limit_of_turns == 0 || players[current_player_idx].count_turns != limit_of_turns;
 }
+
 void GameController::process_events() {
   switch (game_state) {
   case GameState::READ_PLAYERS:
@@ -218,20 +245,25 @@ void GameController::process_events() {
       } else {
         std::cout << "Jogador completou seus turnos";
         game_state = GameState::READ_ACTION;
-        update_player();
+        next_player();
       }
     }
     break;
   case GameState::RECYCLE:
     recycle();
     break;
+  case GameState::HOLD:
+    handle_hold();
+    break;
+  case GameState::LOSE_TURN:
+    dices_back_to_bag();
+    break;
   case GameState::END_TURN:
-    ++players[current_player_idx].count_turns;
-    points_to_player();
-    update_player();
+    end_turn();
     break;
   case GameState::QUIT:
-    game_over(true);
+    handle_quit();
+    break;
   default:
     break;
   }
@@ -254,6 +286,15 @@ void GameController::update() {
   case GameState::ROLL:
     game_state = GameState::READ_ACTION;
     break;
+  case GameState::HOLD:
+    game_state = END_TURN;
+    break;
+  case GameState::QUIT:
+    game_state = READ_ACTION;
+    break;
+  case GameState::LOSE_TURN:
+    game_state = END_TURN;
+    break;
   case GameState::RECYCLE:
     game_state = ROLL;
     break;
@@ -275,7 +316,9 @@ bool GameController::all_turns_completed() {
   return true;
 }
 
-bool GameController::game_over(bool quit_game) { return quit_game; }
+bool GameController::game_over() { 
+  game_state == GameState::END_GAME;
+}
 
 void GameController::setup(const RunningOpt& run_options) {
   dice_bag.add_dices({ GREEN, run_options.weak_die_faces }, run_options.weak_dice);
@@ -284,32 +327,32 @@ void GameController::setup(const RunningOpt& run_options) {
 }
 
 void GameController::parse_config(int argc, char* argv[]) {
-  if (argc == 1) {
-    return;
-  }
-
-  std::string arg{ argv[1] };
-
-  if (arg == "-h") {
-    std::cout << "usage\n";
-    exit(EXIT_SUCCESS);
-  }
-
   RunningOpt run_options;
-
-  if (IniParser::parse(arg)) {
-    run_options.weak_dice = IniParser::get_config<int>("Game.weak_dice", run_options.weak_dice);
-    run_options.strong_dice = IniParser::get_config<int>("Game.strong_dice", run_options.strong_dice);
-    run_options.tough_dice = IniParser::get_config<int>("Game.tough_dice", run_options.tough_dice);
-    run_options.max_players = IniParser::get_config<int>("Game.max_players", run_options.max_players);
-    run_options.brains_to_win = IniParser::get_config<int>("Game.brains_to_win", run_options.brains_to_win);
-    run_options.max_turns = IniParser::get_config<int>("Game.max_turns", run_options.max_turns);
-
-    run_options.weak_die_faces = IniParser::get_config<std::string>("Dice.weak_die_faces", run_options.weak_die_faces);
-    run_options.strong_die_faces = IniParser::get_config<std::string>("Dice.strong_die_faces", run_options.strong_die_faces);
-    run_options.tough_die_faces = IniParser::get_config<std::string>("Dice.tough_die_faces", run_options.tough_die_faces);
+  
+  if (argc == 1) {
+    std::cerr << "[warning] no .ini file passed\n--> using default config\n";
   } else {
-    std::cout << "--> using default config\n";
+    std::string arg{ argv[1] };
+
+    if (arg == "-h") {
+      std::cout << "usage\n";
+      exit(EXIT_SUCCESS);
+    }
+
+    if (IniParser::parse(arg)) {
+      run_options.weak_dice = IniParser::get_config<int>("Game.weak_dice", run_options.weak_dice);
+      run_options.strong_dice = IniParser::get_config<int>("Game.strong_dice", run_options.strong_dice);
+      run_options.tough_dice = IniParser::get_config<int>("Game.tough_dice", run_options.tough_dice);
+      run_options.max_players = IniParser::get_config<int>("Game.max_players", run_options.max_players);
+      run_options.brains_to_win = IniParser::get_config<int>("Game.brains_to_win", run_options.brains_to_win);
+      run_options.max_turns = IniParser::get_config<int>("Game.max_turns", run_options.max_turns);
+
+      run_options.weak_die_faces = IniParser::get_config<std::string>("Dice.weak_die_faces", run_options.weak_die_faces);
+      run_options.strong_die_faces = IniParser::get_config<std::string>("Dice.strong_die_faces", run_options.strong_die_faces);
+      run_options.tough_die_faces = IniParser::get_config<std::string>("Dice.tough_die_faces", run_options.tough_die_faces);
+    } else {
+      std::cout << "--> using default config\n";
+    }
   }
 
   setup(run_options);

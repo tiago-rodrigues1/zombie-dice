@@ -37,7 +37,8 @@ enum GameState : std::uint8_t {
   END_TURN,
   QUIT,
   HOLD,
-  TIE_BREAKER
+  TIE_BREAKER,
+  END_GAME
 };
 
 inline std::string to_string(GameState state) {
@@ -53,6 +54,7 @@ inline std::string to_string(GameState state) {
     case END_TURN:     return "END_TURN";
     case QUIT:         return "QUIT";
     case HOLD:         return "HOLD";
+    case END_GAME:     return "END_GAME";
     default:           return "UNKNOWN";
   }
 }
@@ -92,9 +94,13 @@ private:
   void read_actions();
   void roll_dices();
   void handle_roll();
+  void handle_hold();
+  void handle_quit();
+  void dices_back_to_bag();
+  void end_turn();
   void recycle();
-  void update_player();
-  void points_to_player();
+  void next_player();
+  void consolidate_points();
   bool all_turns_completed();
   bool player_can_play();
   void checks_end_of_game();
@@ -115,7 +121,7 @@ private:
   void process_events();
   void update();
   void render();
-  bool game_over(bool quit_game = false);
+  bool game_over();
 };
 
 #endif
