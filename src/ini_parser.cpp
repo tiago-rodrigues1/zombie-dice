@@ -1,9 +1,9 @@
+#include <iostream>
 #include <sstream>
 #include <vector>
 
 #include "common.hpp"
 #include "ini_parser.hpp"
-#include <iostream>
 
 std::string IniParser::current_section = "";
 std::map<std::string, std::map<std::string, std::string>> IniParser::config;

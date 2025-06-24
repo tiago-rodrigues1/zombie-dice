@@ -11,6 +11,7 @@
 #include "dice_bag.hpp"
 #include "player.hpp"
 #include "zdie.hpp"
+#include "views.hpp"
 
 struct RunningOpt {
   int weak_dice{ 6 };
@@ -35,7 +36,8 @@ enum GameState : std::uint8_t {
   RECYCLE,
   END_TURN,
   QUIT,
-  HOLD
+  HOLD,
+  TIE_BREAKER
 };
 
 inline std::string to_string(GameState state) {
@@ -80,7 +82,11 @@ private:
   size_t current_player_idx;
   size_t min_players;
   size_t max_players;
-
+  Player winner;
+  size_t limit_of_turns{0};
+  size_t highest_point{13};
+  Views view;
+  
   std::vector<std::string> read_players();
   void define_players(std::vector<std::string> players_names);
   void read_actions();
@@ -89,11 +95,15 @@ private:
   void recycle();
   void update_player();
   void points_to_player();
-
+  bool all_turns_completed();
+  bool player_can_play();
+  void checks_end_of_game();
+  std::vector<Player> get_highest_players();
+  
   void setup(const RunningOpt& run_options);
-
-public:
-  GameController() {
+  
+  public:
+  GameController() : view() { // Initialize view with default constructor
     min_players = 2;
     max_players = 6;
     game_state = NEUTRAL;

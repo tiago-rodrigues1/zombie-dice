@@ -1,10 +1,11 @@
-#include "common.hpp"
-#include "game_controller.hpp"
-#include "ini_parser.hpp"
-#include "views.hpp"
+#include "include/game_controller.hpp"
+#include "include/common.hpp"
+#include "include/ini_parser.hpp"
+#include "include/views.hpp"
 
 #include <algorithm>
 #include <chrono>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <random>
@@ -30,9 +31,9 @@ std::vector<std::string> GameController::read_players() {
   names = split(names_str, ',', true);
 
   if (names.size() < min_players) {
-    std::cout
-      << "Please, enter at least " << min_players << " names of the players in a single line, separated by comma. \n"
-         ">>> ";
+    std::cout << "Please, enter at least " << min_players
+              << " names of the players in a single line, separated by comma. \n"
+                 ">>> ";
     return read_players();
   }
 
@@ -60,7 +61,13 @@ void GameController::points_to_player() {
   if (!BSA.empty()) {
     players[current_player_idx].points += BSA.size();
   }
+
+  if (players[current_player_idx].points >= highest_point && limit_of_turns == 0) {
+    limit_of_turns = players[current_player_idx].count_turns;
+   
+  }
 }
+
 
 void GameController::read_actions() {
   std::string action;
@@ -139,15 +146,61 @@ void GameController::recycle() {
 
 void GameController::render() {
   switch (game_state) {
-    case GameState::WELCOME:
-      Views::welcome_message(min_players, max_players);
-      break;
-    case GameState::START:
-      Views::show_players_message(players);
-      break;
+  case GameState::WELCOME:
+    Views::welcome_message(min_players, max_players);
+    break;
+  case GameState::START:
+    Views::show_players_message(players);
+    break;
+  case GameState::READ_ACTION:
+
+  Views::title_and_scoreboard_area(players, current_player_idx);
+  Views::areas(players[current_player_idx], dice_bag.count_dices(), BSA, SSA);
+  Views::message_area({"Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"});
+  Views::rolling_table({'b', 'f', 's'});
+
   }
 }
 
+std::vector<Player> GameController::get_highest_players() {
+  auto it = std::max_element(players.begin(),
+                             players.end(),
+                             [](const Player& a, const Player& b) { return a.points < b.points; });
+
+  if (it != players.end()) {
+    highest_point = it->points;
+
+    std::vector<Player> top_players;
+    for (const Player& player : players) {
+      if (player.points == highest_point) {
+        top_players.push_back(player);
+      }
+    }
+
+    return top_players;
+  }
+}
+
+void GameController::checks_end_of_game() {
+
+  std::vector<Player> top_players = get_highest_players();
+
+  if (top_players.size() == 1) {
+    winner = top_players[0];
+    game_state = GameState::QUIT;
+  }
+
+  else if (!top_players.empty()) {
+    game_state = GameState::READ_ACTION;
+    limit_of_turns++;
+    players = top_players;
+    current_player_idx = 0;
+  }
+}
+
+bool GameController::player_can_play() {
+  return limit_of_turns == 0 || players[current_player_idx].count_turns != limit_of_turns;
+}
 void GameController::process_events() {
   switch (game_state) {
   case GameState::READ_PLAYERS:
@@ -157,14 +210,28 @@ void GameController::process_events() {
     read_actions();
     break;
   case GameState::ROLL:
-    handle_roll();
+    if (player_can_play()) {
+      handle_roll();
+    } else {
+      if (all_turns_completed()) {
+        checks_end_of_game();
+      } else {
+        std::cout << "Jogador completou seus turnos";
+        game_state = GameState::READ_ACTION;
+        update_player();
+      }
+    }
     break;
   case GameState::RECYCLE:
     recycle();
     break;
   case GameState::END_TURN:
+    ++players[current_player_idx].count_turns;
     points_to_player();
     update_player();
+    break;
+  case GameState::QUIT:
+    game_over(true);
   default:
     break;
   }
@@ -198,21 +265,29 @@ void GameController::update() {
   }
 }
 
-bool GameController::game_over(bool quit_game) {
-  return game_state == LOSE_TURN;
+bool GameController::all_turns_completed() {
+  for (Player player : players) {
+    if (limit_of_turns != player.count_turns) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
+bool GameController::game_over(bool quit_game) { return quit_game; }
+
 void GameController::setup(const RunningOpt& run_options) {
-  dice_bag.add_dices({GREEN, run_options.weak_die_faces}, run_options.weak_dice);
-  dice_bag.add_dices({ORANGE, run_options.strong_die_faces}, run_options.strong_dice);
-  dice_bag.add_dices({RED, run_options.tough_die_faces}, run_options.tough_dice);
+  dice_bag.add_dices({ GREEN, run_options.weak_die_faces }, run_options.weak_dice);
+  dice_bag.add_dices({ ORANGE, run_options.strong_die_faces }, run_options.strong_dice);
+  dice_bag.add_dices({ RED, run_options.tough_die_faces }, run_options.tough_dice);
 }
 
 void GameController::parse_config(int argc, char* argv[]) {
   if (argc == 1) {
     return;
   }
-  
+
   std::string arg{ argv[1] };
 
   if (arg == "-h") {

@@ -1,5 +1,5 @@
-#include "common.hpp"
-#include "dice_bag.hpp"
+#include "include/common.hpp"
+#include "include/dice_bag.hpp"
 
 size_t DiceBag::count_dices() { return dices.size(); }
 

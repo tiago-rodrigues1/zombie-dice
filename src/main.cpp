@@ -29,7 +29,7 @@
  * @date	2024
  */
 
-#include "game_controller.hpp"
+#include "include/game_controller.hpp"
 
 int main(int argc, char* argv[]) {
   GameController gc;
