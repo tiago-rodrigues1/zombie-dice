@@ -4,6 +4,12 @@
 #include <cstdint>
 #include <string>
 
+enum ZdieFaces {
+  BRAIN,
+  SHOTGUN,
+  FOOTPRINT
+};
+
 enum dice_type_e : std::uint8_t {
   GREEN = 1,
   ORANGE,
@@ -16,7 +22,7 @@ std::string faces;
 public:
   dice_type_e type;
   Zdie(dice_type_e t, std::string f);
-  char roll();
+  ZdieFaces roll();
 };
 
 
