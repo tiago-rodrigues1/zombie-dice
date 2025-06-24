@@ -13,9 +13,9 @@ private:
   static void update_config(const std::string& key, const std::string& value);
   static void parse_line(const std::string& line);
 public:
-  static void parse(std::ifstream& ini);
+  static bool parse(const std::string& ini_path);
   
   template <typename T>
-  static T get_config(const std::string& accessor);
+  static T get_config(const std::string& accessor, const T& default_value);
 };
 #endif
