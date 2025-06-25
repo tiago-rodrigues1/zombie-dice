@@ -73,6 +73,8 @@ void GameController::consolidate_points() {
 
 
 void GameController::read_actions() {
+  prev_dra.clear();
+  
   std::string action;
   std::getline(std::cin, action);
 
@@ -94,6 +96,8 @@ void GameController::roll_dices() {
   while (i < DRA.size()) {
     Zdie dice = DRA[i];
     ZdieFaces face = dice.roll();
+
+    prev_dra.push_back(dice);
 
     if (face == ZdieFaces::BRAIN) {
       BSA.push_back(dice);
@@ -128,6 +132,8 @@ void GameController::end_turn() {
 }
 
 void GameController::handle_roll() {
+  // prev_dra.clear();
+
   size_t dra_dices_count{ DRA.size() };
   size_t required_dices{ 3 };
 
@@ -178,12 +184,11 @@ void GameController::render() {
     Views::show_players_message(players);
     break;
   case GameState::READ_ACTION:
-
-  Views::title_and_scoreboard_area(players, current_player_idx);
-  Views::areas(players[current_player_idx], dice_bag.count_dices(), BSA, SSA);
-  Views::message_area({"Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"});
-  Views::rolling_table({'b', 'f', 's'});
-
+    Views::title_and_scoreboard_area(players, current_player_idx);
+    Views::areas(players[current_player_idx], dice_bag.count_dices(), BSA, SSA);
+    Views::message_area({"Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"});
+    Views::rolling_table(prev_dra);
+    break;
   }
 }
 

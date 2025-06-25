@@ -73,13 +73,7 @@ void Views::title_and_scoreboard_area(const std::vector<Player>& players,
 
 void Views::area_points(const std::vector<Zdie>& points) {
   for (size_t i{ 0 }; i < points.size(); ++i) {
-    if (points[i].type == dice_type_e::GREEN) {
-      std::cout << "🟩 ";
-    } else if (points[i].type == dice_type_e::ORANGE) {
-      std::cout << "🟧 ";
-    } else if (points[i].type == dice_type_e::RED) {
-      std::cout << "🟥 ";
-    }
+    std::cout << points[i].type_to_emoji();
   }
   std::cout << "\n";
 }
@@ -98,41 +92,50 @@ void Views::areas(Player player,
   std::cout << "\n";
 }
 
-void Views::rolling_table(std::vector<char> faces) {
-  std::string title{ "Rolling Table" };
-  size_t box_width{ 40 };
-  size_t padding_title{ (box_width - title.size()) / 2 };
-  std::cout << "┌────────────────────────────────────────┐" << "\n";
-  std::cout << "│" << std::string(padding_title, ' ') << title
-            << std::string(box_width - padding_title - title.size(), ' ') << "│\n";
-  std::cout << "├────────────────────────────────────────┤" << "\n";
+std::string fill(const std::string& s, size_t n) {
+    std::ostringstream oss;
+    for (size_t i = 0; i < n; ++i) {
+        oss << s;
+    }
+    return oss.str();
+}
 
-  size_t cols = 3;
-  size_t col_width = box_width / cols;
-  std::cout << "│";
+void Views::rolling_table(const std::vector<Zdie>& dices) {
+  std::ostringstream string_table;
+  size_t box_width{ 44 };
+
+  std::string blank_line(box_width, ' ');
+  std::string hline{ fill("─", box_width) };
+
+  std::string title{ "ROLLING TABLE" };
+  size_t padding_title{ (box_width - title.size()) / 2 };
+
+  /// Table Header
+  string_table << "┌" << hline << "┐" << '\n';
+  string_table << "│" << std::string(padding_title, ' ') << title << std::string(padding_title + 1, ' ') << "│" << '\n';
+  string_table << "├" << hline << "┤" << '\n';
+
+  /// Table Body
+  string_table << "│";
   for (size_t i{ 0 }; i < 3; ++i) {
-    std::string emoji;
-    switch (faces[i]) {
-    case 'b':
-      emoji = "🧠(🟧)";
-      break;
-    case 'f':
-      emoji = "💥(🟧)";
-      break;
-    case 's':
-      emoji = "👣(🟧)";
-      break;
-    default:
-      emoji = "❓(🟧)";
-      break;
+    int padding{ 4 };
+
+    std::string face_emoji{ dices.size() > 0 ? dices[i].face_to_emoji().append("(") : std::string(2, ' ') };
+    std::string dice_type_emoji{ dices.size() > 0 ? dices[i].type_to_emoji().append(")") : std::string(1, ' ') };
+    std::string cell_content{ face_emoji.append(dice_type_emoji) };
+
+
+    if (dices.size() == 0) {
+      cell_content = face_emoji.append(" ").append(dice_type_emoji).append(" ");
     }
 
-    size_t cell_width = 13;
-    size_t content_width = 8;  // Aproximadamente 2+1+2+1+2
-    size_t padding = (cell_width - content_width) / 2;
-    std::cout << std::setw(cell_width) << std::left << emoji << "│";
-  }   
-  std::cout << "\n└────────────────────────────────────────┘" << "\n";
+    string_table << std::string(padding, ' ') << cell_content << std::string(padding, ' ') << "│";
+  }
+
+  string_table << "\n└" << hline << "┘" << '\n';
+
+
+  std::cout << string_table.str();
 }
 
 void Views::message_area(std::vector<std::string> messages) {

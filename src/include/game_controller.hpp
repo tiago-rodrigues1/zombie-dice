@@ -79,6 +79,7 @@ private:
   std::vector<Zdie> DRA;
   std::vector<Zdie> BSA;
   std::vector<Zdie> SSA;
+  std::vector<Zdie> prev_dra;
   std::map<std::string, size_t> partial_points;
   DiceBag dice_bag;
   size_t current_player_idx;
