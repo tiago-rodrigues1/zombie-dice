@@ -73,7 +73,7 @@ void GameController::consolidate_points() {
 
 
 void GameController::read_actions() {
-  prev_dra.clear();
+  // prev_dra.clear();
   
   std::string action;
   std::getline(std::cin, action);
@@ -132,8 +132,6 @@ void GameController::end_turn() {
 }
 
 void GameController::handle_roll() {
-  // prev_dra.clear();
-
   size_t dra_dices_count{ DRA.size() };
   size_t required_dices{ 3 };
 
@@ -172,6 +170,11 @@ void GameController::handle_quit() {
   std::cout << players[current_player_idx].name << " is quitting\n";
   dices_back_to_bag();
   players.erase(players.begin() + current_player_idx);
+
+  if (players.size() == 1) {
+    game_state == END_GAME;
+  }
+
   next_player();
 }
 
@@ -188,6 +191,7 @@ void GameController::render() {
     Views::areas(players[current_player_idx], dice_bag.count_dices(), BSA, SSA);
     Views::message_area({"Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"});
     Views::rolling_table(prev_dra);
+    prev_dra.clear();
     break;
   }
 }
@@ -340,7 +344,7 @@ void GameController::parse_config(int argc, char* argv[]) {
     std::string arg{ argv[1] };
 
     if (arg == "-h") {
-      std::cout << "usage\n";
+      Views::usage();
       exit(EXIT_SUCCESS);
     }
 

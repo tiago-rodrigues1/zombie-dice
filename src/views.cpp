@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "include/views.hpp"
+#include "views.hpp"
 
 void Views::welcome_message(size_t min_players, size_t max_players) {
   std::cout << R"(         ---> Welcome to the Zombi Dice game (v 0.1) <--
@@ -93,11 +94,11 @@ void Views::areas(Player player,
 }
 
 std::string fill(const std::string& s, size_t n) {
-    std::ostringstream oss;
-    for (size_t i = 0; i < n; ++i) {
-        oss << s;
-    }
-    return oss.str();
+  std::ostringstream oss;
+  for (size_t i = 0; i < n; ++i) {
+    oss << s;
+  }
+  return oss.str();
 }
 
 void Views::rolling_table(const std::vector<Zdie>& dices) {
@@ -112,7 +113,8 @@ void Views::rolling_table(const std::vector<Zdie>& dices) {
 
   /// Table Header
   string_table << "┌" << hline << "┐" << '\n';
-  string_table << "│" << std::string(padding_title, ' ') << title << std::string(padding_title + 1, ' ') << "│" << '\n';
+  string_table << "│" << std::string(padding_title, ' ') << title
+               << std::string(padding_title + 1, ' ') << "│" << '\n';
   string_table << "├" << hline << "┤" << '\n';
 
   /// Table Body
@@ -120,10 +122,11 @@ void Views::rolling_table(const std::vector<Zdie>& dices) {
   for (size_t i{ 0 }; i < 3; ++i) {
     int padding{ 4 };
 
-    std::string face_emoji{ dices.size() > 0 ? dices[i].face_to_emoji().append("(") : std::string(2, ' ') };
-    std::string dice_type_emoji{ dices.size() > 0 ? dices[i].type_to_emoji().append(")") : std::string(1, ' ') };
+    std::string face_emoji{ dices.size() > 0 ? dices[i].face_to_emoji().append("(")
+                                             : std::string(2, ' ') };
+    std::string dice_type_emoji{ dices.size() > 0 ? dices[i].type_to_emoji().append(")")
+                                                  : std::string(1, ' ') };
     std::string cell_content{ face_emoji.append(dice_type_emoji) };
-
 
     if (dices.size() == 0) {
       cell_content = face_emoji.append(" ").append(dice_type_emoji).append(" ");
@@ -134,8 +137,27 @@ void Views::rolling_table(const std::vector<Zdie>& dices) {
 
   string_table << "\n└" << hline << "┘" << '\n';
 
-
   std::cout << string_table.str();
+}
+
+void Views::usage() {
+  std::cout <<
+    R"(Usage: zdice [CONFIG_FILE]
+
+    Zombie Dice game implementation with optional configuration.
+
+    Options:
+      -h, --help            display this help and exit
+
+    Arguments:
+      CONFIG_FILE           optional path to a .ini configuration file
+                            if not provided, default values will be used
+
+    Examples:
+      zdice                       # run with default config
+      zdice config/game.ini       # run using config from game.ini
+    )";
+    std::cout << '\n';
 }
 
 void Views::message_area(std::vector<std::string> messages) {

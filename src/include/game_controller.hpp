@@ -87,7 +87,7 @@ private:
   size_t max_players;
   Player winner;
   size_t limit_of_turns{0};
-  size_t highest_point{13};
+  size_t highest_point{4};
   Views view;
   
   std::vector<std::string> read_players();
