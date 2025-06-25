@@ -80,17 +80,10 @@
   }
 
   void Views::areas(Player player,
-                    size_t quantity_dices,
-                    std::vector<Zdie> BSA,
-                    std::vector<Zdie> SSA) {
+                    size_t quantity_dices) {
     std::cout << "\"" << player.name << "\" | Turn #: " << player.count_turns
               << " | Bag has: " << quantity_dices << " 🎲.\n\n";
 
-    std::cout << "🧠: ";
-    area_points(BSA);
-    std::cout << "💥: ";
-    area_points(SSA);
-    std::cout << "\n";
   }
 
   std::string fill(const std::string& s, size_t n) {
@@ -101,7 +94,9 @@
       return oss.str();
   }
 
-  void Views::rolling_table(const std::vector<Zdie>& dices) {
+  void Views::rolling_table(const std::vector<Zdie>& dices, const std::vector<Zdie>& BSA,
+                    const std::vector<Zdie>& SSA) {
+    
     std::ostringstream string_table;
     size_t box_width{ 44 };
 
@@ -137,6 +132,12 @@
 
 
     std::cout << string_table.str();
+
+    std::cout << "🧠: ";
+    area_points(BSA);
+    std::cout << "💥: ";
+    area_points(SSA);
+    std::cout << "\n";
   }
 
   void Views::message_area(std::vector<std::string> messages) {

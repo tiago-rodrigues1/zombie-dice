@@ -61,7 +61,7 @@ void GameController::define_players(std::vector<std::string> players_names) {
 }
 
 void GameController::consolidate_points() {
-  Player player{ players[current_player_idx] };
+  Player& player{ players[current_player_idx] };
   player.points += partial_points[player.name];
 
   std::cout << player.name << " made " << player.points << " points\n";
@@ -76,7 +76,7 @@ void GameController::read_actions() {
     "Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"
   };
   prev_dra.clear();
-  
+
   std::string action;
   std::getline(std::cin, action);
 
@@ -130,18 +130,19 @@ void GameController::dices_back_to_bag() {
 }
 
 void GameController::end_turn() {
-  message = { "Rolling outcome:",
-              "# brains you ate: " + std::to_string(BSA.size()),
-              "# shots that hit you: " + std::to_string(SSA.size()),
-              "Press <enter> to continue." };
   consolidate_points();
   dices_back_to_bag();
   next_player();
 }
 
 void GameController::handle_roll() {
+
   // prev_dra.clear();
 
+  message = { "Rolling outcome:",
+              "# brains you ate: " + std::to_string(BSA.size()),
+              "# shots that hit you: " + std::to_string(SSA.size()),
+              "Press <enter> to continue." };
   size_t dra_dices_count{ DRA.size() };
   size_t required_dices{ 3 };
 
@@ -186,31 +187,27 @@ void GameController::handle_quit() {
 void GameController::render() {
   switch (game_state) {
   case GameState::WELCOME:
-    Views::welcome_message(min_players, max_players);
+    Views::welcome_message(min_players, max_players);  // Essa já foi traduzida na classe Views
     break;
   case GameState::START:
-    Views::show_players_message(players);
+    Views::show_players_message(players);  // Essa também já está em português
     break;
   case GameState::READ_ACTION:
-    Views::title_and_scoreboard_area(players, current_player_idx);
-    Views::areas(players[current_player_idx], dice_bag.count_dices(), BSA, SSA);
+    Views::areas(players[current_player_idx], dice_bag.count_dices());
+    Views::rolling_table(prev_dra, BSA, SSA);
     Views::message_area(message);
     break;
   case GameState::ROLL:
-    Views::title_and_scoreboard_area(players, current_player_idx);
-    Views::areas(players[current_player_idx], dice_bag.count_dices(), BSA, SSA);
+    Views::areas(players[current_player_idx], dice_bag.count_dices());
     Views::message_area(message);
-    Views::rolling_table(prev_dra);
     break;
   case GameState::END_TURN:
     Views::title_and_scoreboard_area(players, current_player_idx);
-    Views::areas(players[current_player_idx], dice_bag.count_dices(), BSA, SSA);
+    Views::areas(players[current_player_idx], dice_bag.count_dices());
+    Views::rolling_table(prev_dra, BSA, SSA);
     Views::message_area(message);
-    Views::rolling_table(prev_dra);
     break;
   case GameState::ERROR:
-    Views::title_and_scoreboard_area(players, current_player_idx);
-    Views::areas(players[current_player_idx], dice_bag.count_dices(), BSA, SSA);
     Views::message_area(message);
     break;
   }
