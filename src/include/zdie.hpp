@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string>
 
-enum ZdieFaces {
+enum ZdieFaces : std::uint8_t{
   BRAIN,
   SHOTGUN,
   FOOTPRINT

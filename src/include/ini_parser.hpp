@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 
+
 class IniParser {
 private:
   static std::string current_section;

@@ -57,11 +57,11 @@ void GameController::define_players(std::vector<std::string> players_names) {
   }
 
   current_player_idx = 0;
-  players[current_player_idx].count_turns = 1;
+  players[current_player_idx].count_turns = 0;
 }
 
 void GameController::consolidate_points() {
-  Player player{ players[current_player_idx] };
+  Player& player{ players[current_player_idx] };
   player.points += partial_points[player.name];
 
   std::cout << player.name << " made " << player.points << " points\n";
@@ -71,10 +71,12 @@ void GameController::consolidate_points() {
   }
 }
 
+void GameController::read_actions() {  
+  message = {
+    "Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"
+  };
+  prev_dra.clear();
 
-void GameController::read_actions() {
-  // prev_dra.clear();
-  
   std::string action;
   std::getline(std::cin, action);
 
@@ -86,6 +88,8 @@ void GameController::read_actions() {
     game_state = GameState::QUIT;
   } else if (action.empty()) {
     game_state = GameState::ROLL;
+  } else {
+    game_state = GameState::ERROR;
   }
 
   process_events();
@@ -132,17 +136,21 @@ void GameController::end_turn() {
 }
 
 void GameController::handle_roll() {
+  message = { "Rolling outcome:",
+              "# brains you ate: " + std::to_string(BSA.size()),
+              "# shots that hit you: " + std::to_string(SSA.size()),
+              "Press <enter> to continue." };
   size_t dra_dices_count{ DRA.size() };
   size_t required_dices{ 3 };
 
   if (dra_dices_count < required_dices) {
     required_dices -= dra_dices_count;
-    
+
     if (dice_bag.count_dices() < required_dices) {
       game_state = GameState::RECYCLE;
       process_events();
     }
-    
+
     std::vector<Zdie> drawed_dices{ dice_bag.draw(required_dices) };
     DRA.insert(DRA.begin(), drawed_dices.begin(), drawed_dices.end());
   }
@@ -181,25 +189,39 @@ void GameController::handle_quit() {
 void GameController::render() {
   switch (game_state) {
   case GameState::WELCOME:
-    Views::welcome_message(min_players, max_players);
+    Views::welcome_message(min_players, max_players);  // Essa já foi traduzida na classe Views
     break;
   case GameState::START:
-    Views::show_players_message(players);
+    Views::show_players_message(players);  // Essa também já está em português
     break;
   case GameState::READ_ACTION:
+    Views::areas(players[current_player_idx], dice_bag.count_dices());
+    Views::rolling_table(prev_dra, BSA, SSA);
+    Views::message_area(message);
+    break;
+  case GameState::ROLL:
+    Views::areas(players[current_player_idx], dice_bag.count_dices());
+    Views::message_area(message);
+    break;
+  case GameState::END_TURN:
     Views::title_and_scoreboard_area(players, current_player_idx);
-    Views::areas(players[current_player_idx], dice_bag.count_dices(), BSA, SSA);
+    Views::areas(players[current_player_idx], dice_bag.count_dices());
     Views::message_area({"Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"});
-    Views::rolling_table(prev_dra);
+    Views::rolling_table(prev_dra, BSA, SSA);
     prev_dra.clear();
+    Views::areas(players[current_player_idx], dice_bag.count_dices());
+    Views::message_area(message);
+    break;
+  case GameState::ERROR:
+    Views::message_area(message);
     break;
   }
 }
 
 std::vector<Player> GameController::get_highest_players() {
-  auto it = std::max_element(players.begin(),
-                             players.end(),
-                             [](const Player& a, const Player& b) { return a.points < b.points; });
+  auto it = std::max_element(players.begin(), players.end(), [](const Player& a, const Player& b) {
+    return a.points < b.points;
+  });
 
   if (it != players.end()) {
     highest_point = it->points;
@@ -226,6 +248,14 @@ void GameController::checks_end_of_game() {
   }
 
   else if (!top_players.empty()) {
+    std::string player_names;
+    for (Player player : top_players) {
+      player_names.append("\"");
+      player_names.append(player.name);
+      player_names.append("\" ");
+    };
+    message
+      = { "We have a tie!", "Players in tie break:", player_names, "Press <enter> to continue." };
     game_state = GameState::READ_ACTION;
     limit_of_turns++;
     players = top_players;
@@ -243,6 +273,9 @@ void GameController::process_events() {
     define_players(read_players());
     break;
   case GameState::READ_ACTION:
+    message = {
+      "Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"
+    };
     read_actions();
     break;
   case GameState::ROLL:
@@ -252,7 +285,7 @@ void GameController::process_events() {
       if (all_turns_completed()) {
         checks_end_of_game();
       } else {
-        std::cout << "Jogador completou seus turnos";
+        message = { "All turns completed for this player." };
         game_state = GameState::READ_ACTION;
         next_player();
       }
@@ -272,6 +305,9 @@ void GameController::process_events() {
     break;
   case GameState::QUIT:
     handle_quit();
+    break;
+  case GameState::ERROR:
+    message = { "Invalid input!", "Please select a valid option" };
     break;
   default:
     break;
@@ -310,6 +346,9 @@ void GameController::update() {
   case GameState::END_TURN:
     game_state = GameState::READ_ACTION;
     break;
+  case GameState::ERROR:
+    game_state = GameState::READ_ACTION;
+    break;
   default:
     break;
   }
@@ -325,9 +364,7 @@ bool GameController::all_turns_completed() {
   return true;
 }
 
-bool GameController::game_over() { 
-  game_state == GameState::END_GAME;
-}
+bool GameController::game_over() { game_state == GameState::END_GAME; }
 
 void GameController::setup(const RunningOpt& run_options) {
   dice_bag.add_dices({ GREEN, run_options.weak_die_faces }, run_options.weak_dice);
@@ -337,7 +374,7 @@ void GameController::setup(const RunningOpt& run_options) {
 
 void GameController::parse_config(int argc, char* argv[]) {
   RunningOpt run_options;
-  
+
   if (argc == 1) {
     std::cerr << "[warning] no .ini file passed\n--> using default config\n";
   } else {
@@ -350,15 +387,22 @@ void GameController::parse_config(int argc, char* argv[]) {
 
     if (IniParser::parse(arg)) {
       run_options.weak_dice = IniParser::get_config<int>("Game.weak_dice", run_options.weak_dice);
-      run_options.strong_dice = IniParser::get_config<int>("Game.strong_dice", run_options.strong_dice);
-      run_options.tough_dice = IniParser::get_config<int>("Game.tough_dice", run_options.tough_dice);
-      run_options.max_players = IniParser::get_config<int>("Game.max_players", run_options.max_players);
-      run_options.brains_to_win = IniParser::get_config<int>("Game.brains_to_win", run_options.brains_to_win);
+      run_options.strong_dice
+        = IniParser::get_config<int>("Game.strong_dice", run_options.strong_dice);
+      run_options.tough_dice
+        = IniParser::get_config<int>("Game.tough_dice", run_options.tough_dice);
+      run_options.max_players
+        = IniParser::get_config<int>("Game.max_players", run_options.max_players);
+      run_options.brains_to_win
+        = IniParser::get_config<int>("Game.brains_to_win", run_options.brains_to_win);
       run_options.max_turns = IniParser::get_config<int>("Game.max_turns", run_options.max_turns);
 
-      run_options.weak_die_faces = IniParser::get_config<std::string>("Dice.weak_die_faces", run_options.weak_die_faces);
-      run_options.strong_die_faces = IniParser::get_config<std::string>("Dice.strong_die_faces", run_options.strong_die_faces);
-      run_options.tough_die_faces = IniParser::get_config<std::string>("Dice.tough_die_faces", run_options.tough_die_faces);
+      run_options.weak_die_faces
+        = IniParser::get_config<std::string>("Dice.weak_die_faces", run_options.weak_die_faces);
+      run_options.strong_die_faces
+        = IniParser::get_config<std::string>("Dice.strong_die_faces", run_options.strong_die_faces);
+      run_options.tough_die_faces
+        = IniParser::get_config<std::string>("Dice.tough_die_faces", run_options.tough_die_faces);
     } else {
       std::cout << "--> using default config\n";
     }
