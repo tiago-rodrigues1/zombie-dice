@@ -18,11 +18,15 @@ enum dice_type_e : std::uint8_t {
 
 class Zdie {
 private:
+dice_type_e type;
 std::string faces;
+ZdieFaces last_rolled_face;
 public:
-  dice_type_e type;
   Zdie(dice_type_e t, std::string f);
   ZdieFaces roll();
+
+  std::string face_to_emoji() const;
+  std::string type_to_emoji() const;
 };
 
 
