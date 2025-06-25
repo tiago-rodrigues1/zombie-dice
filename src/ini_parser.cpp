@@ -33,7 +33,7 @@ std::string remove_quotes(const std::string& l) {
     clone.erase(0, 1);
   }
 
-  if (!clone.empty() and clone.back() == '\"' or clone.back() == '\'') {
+  if ((!clone.empty() and clone.back() == '\"') or clone.back() == '\'') {
     clone.pop_back();
   }
 

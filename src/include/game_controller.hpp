@@ -38,40 +38,8 @@ enum GameState : std::uint8_t {
   QUIT,
   HOLD,
   ERROR,
-  TIE_BREAKER,
   END_GAME
 };
-
-inline std::string to_string(GameState state) {
-  switch (state) {
-    case RECYCLE:      return "RECYCLE";
-    case NEUTRAL:      return "NEUTRAL";
-    case START:        return "START";
-    case WELCOME:      return "WELCOME";
-    case READ_PLAYERS: return "READ_PLAYERS";
-    case READ_ACTION:  return "READ_ACTION";
-    case ROLL:         return "ROLL";
-    case LOSE_TURN:    return "LOSE_TURN";
-    case END_TURN:     return "END_TURN";
-    case QUIT:         return "QUIT";
-    case HOLD:         return "HOLD";
-    case END_GAME:     return "END_GAME";
-    default:           return "UNKNOWN";
-  }
-}
-
-inline void print_running_opt(const RunningOpt& opt) {
-    std::cout << "RunningOpt configuration:\n";
-    std::cout << "  weak_dice      : " << opt.weak_dice << '\n';
-    std::cout << "  strong_dice    : " << opt.strong_dice << '\n';
-    std::cout << "  tough_dice     : " << opt.tough_dice << '\n';
-    std::cout << "  max_players    : " << opt.max_players << '\n';
-    std::cout << "  brains_to_win  : " << opt.brains_to_win << '\n';
-    std::cout << "  max_turns      : " << opt.max_turns << '\n';
-    std::cout << "  weak_die_faces : " << opt.weak_die_faces << '\n';
-    std::cout << "  strong_die_faces: " << opt.strong_die_faces << '\n';
-    std::cout << "  tough_die_faces : " << opt.tough_die_faces << '\n';
-}
 
 class GameController {
 private:
@@ -88,7 +56,7 @@ private:
   size_t max_players;
   Player winner;
   size_t limit_of_turns{0};
-  size_t highest_point{13};
+  size_t highest_point{4};
   Views view;
   std::vector<std::string> message{{"Ready to play?", "<enter> - roll dices", "H + <enter> - hold turn", "Q + <enter> - quit game"}};
   
@@ -117,8 +85,6 @@ private:
     max_players = 6;
     game_state = NEUTRAL;
   }
-
-  void print_state();
 
   void parse_config(int argc, char* argv[]);
   void process_events();
