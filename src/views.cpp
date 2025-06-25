@@ -2,8 +2,14 @@
 #include <iomanip>
 #include <iostream>
 
-#include "include/views.hpp"
+#include "views.hpp"
 
+/**
+ * @brief Prints the welcome screen with game instructions.
+ * 
+ * @param min_players Minimum number of players allowed.
+ * @param max_players Maximum number of players allowed.
+ */
 void Views::welcome_message(size_t min_players, size_t max_players) {
   std::cout << R"(         ---> Welcome to the Zombi Dice game (v 0.1) <--
 
@@ -31,6 +37,11 @@ void Views::welcome_message(size_t min_players, size_t max_players) {
             << "\n\n>>>\n";
 }
 
+/**
+ * @brief Displays the list of players and who will start the game.
+ * 
+ * @param players Vector containing all players.
+ */
 void Views::show_players_message(const std::vector<Player>& players) {
   std::cout << ">>> The players of the game are:\n";
   for (Player player : players) {
@@ -41,6 +52,14 @@ void Views::show_players_message(const std::vector<Player>& players) {
   std::cout << "Press <Enter> to start the match.\n";
 }
 
+/**
+ * @brief Prints a visual representation of a player's points.
+ * 
+ * Displays up to 13 icons, where each brain (🧠) represents a point scored
+ * and each diamond (🔶) represents a missing point.
+ * 
+ * @param player The player whose points will be displayed.
+ */
 void print_points(const Player& player) {
   for (size_t i{ 0 }; i < 13; ++i) {
     if (i < player.points) {
@@ -51,6 +70,12 @@ void print_points(const Player& player) {
   }
 }
 
+/**
+ * @brief Displays the game's title and a scoreboard with all players' points and turns.
+ * 
+ * @param players List of players.
+ * @param current_player_index Index of the current player.
+ */
 void Views::title_and_scoreboard_area(const std::vector<Player>& players,
                                       size_t current_player_index) {
   std::cout << "→☣️ [🧟] Zombie Dice Delux, v 0.1 [🧟] ☣️←" << "\n";
@@ -72,6 +97,11 @@ void Views::title_and_scoreboard_area(const std::vector<Player>& players,
   }
 }
 
+/**
+ * @brief Prints emojis representing the dice in a given area.
+ * 
+ * @param points Vector of dice (Zdie) to display.
+ */
 void Views::area_points(const std::vector<Zdie>& points) {
   for (size_t i{ 0 }; i < points.size(); ++i) {
     std::cout << points[i].type_to_emoji();
@@ -79,11 +109,24 @@ void Views::area_points(const std::vector<Zdie>& points) {
   std::cout << "\n";
 }
 
+/**
+ * @brief Displays the current player's turn information and remaining dice in the bag.
+ * 
+ * @param player Current player.
+ * @param quantity_dices Number of dice remaining in the bag.
+ */
 void Views::areas(Player player, size_t quantity_dices) {
   std::cout << "\"" << player.name << "\" | Turn #: " << player.count_turns
             << " | Bag has: " << quantity_dices << " 🎲.\n\n";
 }
 
+/**
+ * @brief Repeats a string pattern a given number of times.
+ * 
+ * @param s The string to repeat.
+ * @param n Number of times to repeat.
+ * @return std::string The resulting concatenated string.
+ */
 std::string fill(const std::string& s, size_t n) {
   std::ostringstream oss;
   for (size_t i = 0; i < n; ++i) {
@@ -92,6 +135,13 @@ std::string fill(const std::string& s, size_t n) {
   return oss.str();
 }
 
+/**
+ * @brief Renders the rolling table with the current dice faces and results (brains and shots).
+ * 
+ * @param dices The dice currently rolled.
+ * @param BSA Dice showing brain symbols.
+ * @param SSA Dice showing shot symbols.
+ */
 void Views::rolling_table(const std::vector<Zdie>& dices,
                           const std::vector<Zdie>& BSA,
                           const std::vector<Zdie>& SSA) {
@@ -140,6 +190,11 @@ void Views::rolling_table(const std::vector<Zdie>& dices,
   std::cout << "\n";
 }
 
+/**
+ * @brief Prints a message box with a list of strings as lines.
+ * 
+ * @param messages Vector of messages to display in the box.
+ */
 void Views::message_area(std::vector<std::string> messages) {
   size_t box_width{ 44 };
   size_t padding_left{ 3 };
@@ -158,6 +213,9 @@ void Views::message_area(std::vector<std::string> messages) {
   std::cout << "└" << fill("─", box_width) << "┘\n\n";
 }
 
+/**
+ * @brief Displays the usage help message for the command-line interface.
+ */
 void Views::usage() {
   std::cout <<
     R"(Usage: zdice [CONFIG_FILE]

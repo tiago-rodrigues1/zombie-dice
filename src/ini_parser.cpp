@@ -8,6 +8,13 @@
 std::string IniParser::current_section = "";
 std::map<std::string, std::map<std::string, std::string>> IniParser::config;
 
+/**
+ * @brief Throws a formatted warning as an exception.
+ * 
+ * @param msg Description of the warning.
+ * @param var The related variable or value.
+ * @throw std::invalid_argument with formatted warning message.
+ */
 void throw_warning(const std::string& msg, const std::string& var) {
   std::ostringstream warn_msg;
   warn_msg << "[warning] " << msg << ": " << var << '\n';
@@ -15,6 +22,13 @@ void throw_warning(const std::string& msg, const std::string& var) {
   throw std::invalid_argument(warn_msg.str());
 }
 
+/**
+ * @brief Removes comments from a line of a ini file.
+ * 
+ * @param l Line to process.
+ * @param c Comment delimiters (default: "#;").
+ * @return std::string Line with comments removed.
+ */
 std::string remove_comments(std::string& l, const char* c = "#;") {
   std::string clone{ l };
   size_t pos = clone.find_first_of(c);
@@ -26,6 +40,12 @@ std::string remove_comments(std::string& l, const char* c = "#;") {
   return clone;
 }
 
+/**
+ * @brief Removes surrounding single or double quotes from a string.
+ * 
+ * @param l Input string.
+ * @return std::string String without surrounding quotes.
+ */
 std::string remove_quotes(const std::string& l) {
   std::string clone{ l };
 
@@ -40,6 +60,13 @@ std::string remove_quotes(const std::string& l) {
   return clone;
 }
 
+/**
+ * @brief Checks if a key is valid (alphanumeric with '_' or '-').
+ * 
+ * @param key The key to validate.
+ * @return true if the key is valid.
+ * @return false otherwise.
+ */
 bool is_key_valid(const std::string& key) {
   if (key.empty()) {
     return false;
@@ -54,7 +81,12 @@ bool is_key_valid(const std::string& key) {
   return true;
 }
 
-
+/**
+ * @brief Updates the configuration with a new key-value pair.
+ * 
+ * @param key The key to update.
+ * @param value The corresponding value.
+ */
 void IniParser::update_config(const std::string& key, const std::string& value) {
   if (current_section.empty()) {
     config["root"][key] = value;
@@ -63,6 +95,11 @@ void IniParser::update_config(const std::string& key, const std::string& value) 
   }
 }
 
+/**
+ * @brief Parses a single line of a .ini file.
+ * 
+ * @param line The line to parse.
+ */
 void IniParser::parse_line(const std::string& line) {
   if (line.size() == 0) {
     return;
@@ -101,6 +138,13 @@ void IniParser::parse_line(const std::string& line) {
   update_config(key, value);
 }
 
+/**
+ * @brief Parses a .ini file and populates the internal config map.
+ * 
+ * @param ini_path Path to the .ini file.
+ * @return true if parsing was successful.
+ * @return false if an error occurred.
+ */
 bool IniParser::parse(const std::string& ini_path) {
   try {
     std::ifstream ini{ ini_path };
@@ -135,6 +179,13 @@ bool IniParser::parse(const std::string& ini_path) {
   
 }
 
+/**
+ * @brief Retrieves a raw string value from the config map.
+ * 
+ * @param accessor Accessor in the format "section.key" or just "key".
+ * @return std::string The corresponding value.
+ * @throw std::invalid_argument if the key or section is not found.
+ */
 std::string IniParser::get_value(const std::string& accessor) {
   std::vector<std::string> keys{ split(accessor, '.') };
 
@@ -164,6 +215,13 @@ std::string IniParser::get_value(const std::string& accessor) {
   return it_key->second;
 }
 
+/**
+ * @brief Retrieves a configuration value of type int.
+ * 
+ * @param accessor Accessor to the key in "section.key" format.
+ * @param default_value Value to return if key is missing or invalid.
+ * @return int Parsed integer value or default.
+ */
 template<>
 int IniParser::get_config<int>(const std::string& accessor, const int& default_value) {
   try {
@@ -175,6 +233,13 @@ int IniParser::get_config<int>(const std::string& accessor, const int& default_v
   }
 }
 
+/**
+ * @brief Retrieves a configuration value of type std::string.
+ * 
+ * @param accessor Accessor to the key in "section.key" format.
+ * @param default_value Value to return if key is missing or invalid.
+ * @return std::string The value or default.
+ */
 template<>
 std::string IniParser::get_config<std::string>(const std::string& accessor, const std::string& default_value) {
   try {
@@ -185,6 +250,13 @@ std::string IniParser::get_config<std::string>(const std::string& accessor, cons
   }
 }
 
+/**
+ * @brief Retrieves a configuration value of type double.
+ * 
+ * @param accessor Accessor to the key in "section.key" format.
+ * @param default_value Value to return if key is missing or invalid.
+ * @return double Parsed double or default.
+ */
 template<>
 double IniParser::get_config<double>(const std::string& accessor, const double& default_value) {
   try {
